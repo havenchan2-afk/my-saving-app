@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 30天儲錢大挑戰</title>
+    <style>
+        :root {
+            --primary-color: #ff7eb9;
+            --bg-color: #fdf6f9;
+            --card-bg: #ffffff;
+            --text-color: #4a4a4a;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .progress-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .progress-bar-bg {
+            background: #eee;
+            border-radius: 10px;
+            height: 12px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        #progress-bar-fill {
+            background: linear-gradient(90deg, #ff7eb9, #ffb199);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .daily-card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 25px;
+            text-align: center;
+            border: 2px dashed var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .amount {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(255, 126, 185, 0.3);
+        }
+        button:disabled {
+            background: #ccc;
+            box-shadow: none;
+        }
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .day-dot {
+            aspect-ratio: 1;
+            background: #eee;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #999;
+        }
+        .day-dot.done {
+            background: var(--primary-color);
+            color: white;
+        }
+        .reset-btn {
+            background: none;
+            color: #999;
+            font-size: 0.8rem;
+            text-decoration: underline;
+            margin-top: 20px;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>加油，親愛的 ❤️</h1>
+        <p>每一小步都是未來的保障</p>
+    </div>
+
+    <div class="progress-card">
+        <div>目前進度：<span id="current-total">$0</span> / $4,800</div>
+        <div class="progress-bar-bg">
+            <div id="progress-bar-fill"></div>
+        </div>
+        <small id="days-left">剩餘天數：30 天</small>
+    </div>
+
+    <div class="daily-card" id="daily-card">
+        <div id="status-text">今日儲蓄目標</div>
+        <div class="amount" id="today-amount">$0</div>
+        <button id="check-btn" onclick="markAsDone()">我已儲好！</button>
+    </div>
+
+    <div class="history-grid" id="history-grid">
+        </div>
+
+    <button class="reset-btn" onclick="resetPlan()">重新開始新一個月</button>
+</div>
+
+<script>
+    const TARGET_GOAL = 4800;
+    const TOTAL_DAYS = 30;
+    let plan = [];
+    let completedDays = [];
+
+    // 初始化計劃
+    function init() {
+        const savedPlan = localStorage.getItem('savings_plan');
+        const savedProgress = localStorage.getItem('savings_progress');
+
+        if (savedPlan) {
+            plan = JSON.parse(savedPlan);
+            completedDays = JSON.parse(savedProgress) || [];
+        } else {
+            generateNewPlan();
+        }
+        render();
+    }
+
+    function generateNewPlan() {
+        plan = [];
+        // 10天輕鬆(50-100), 10天中等(120-180), 10天挑戰(200-250)
+        for(let i=0; i<10; i++) plan.push(Math.floor(Math.random() * 51) + 50);
+        for(let i=0; i<10; i++) plan.push(Math.floor(Math.random() * 61) + 120);
+        for(let i=0; i<10; i++) plan.push(Math.floor(Math.random() * 51) + 200);
+        
+        // 洗牌
+        plan.sort(() => Math.random() - 0.5);
+        
+        // 微調總額
+        let currentTotal = plan.reduce((a, b) => a + b, 0);
+        plan[29] += (TARGET_GOAL - currentTotal);
+        
+        localStorage.setItem('savings_plan', JSON.stringify(plan));
+        completedDays = [];
+        localStorage.setItem('savings_progress', JSON.stringify(completedDays));
+    }
+
+    function render() {
+        const currentDayIndex = completedDays.length;
+        const isFinished = currentDayIndex >= TOTAL_DAYS;
+
+        // 更新金額顯示
+        const todayAmount = isFinished ? 0 : plan[currentDayIndex];
+        document.getElementById('today-amount').innerText = `$${todayAmount}`;
+        
+        // 更新進度條
+        const totalSaved = completedDays.reduce((sum, idx) => sum + plan[idx], 0);
+        document.getElementById('current-total').innerText = `$${totalSaved}`;
+        const progressPercent = (totalSaved / TARGET_GOAL) * 100;
+        document.getElementById('progress-bar-fill').style.width = `${Math.min(progressPercent, 100)}%`;
+        
+        document.getElementById('days-left').innerText = `剩餘天數：${TOTAL_DAYS - completedDays.length} 天`;
+
+        // 按鈕狀態
+        const btn = document.getElementById('check-btn');
+        if(isFinished) {
+            btn.innerText = "本月已圓滿達成！";
+            btn.disabled = true;
+            document.getElementById('status-text').innerText = "太棒了！";
+        }
+
+        // 生成歷史網格
+        const grid = document.getElementById('history-grid');
+        grid.innerHTML = '';
+        for(let i=0; i<TOTAL_DAYS; i++) {
+            const dot = document.createElement('div');
+            dot.className = `day-dot ${i < completedDays.length ? 'done' : ''}`;
+            dot.innerText = i + 1;
+            grid.appendChild(dot);
+        }
+    }
+
+    function markAsDone() {
+        if(completedDays.length < TOTAL_DAYS) {
+            completedDays.push(completedDays.length);
+            localStorage.setItem('savings_progress', JSON.stringify(completedDays));
+            render();
+            alert("成功！記得把錢存入儲蓄戶口喔！💪");
+        }
+    }
+
+    function resetPlan() {
+        if(confirm("確定要重新開始新的 30 天計劃嗎？目前的進度會被清除喔！")) {
+            generateNewPlan();
+            render();
+        }
+    }
+
+    init();
+</script>
+
+</body>
+</html>
