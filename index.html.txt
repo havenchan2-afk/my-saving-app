@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>💰 30天儲錢大挑戰</title>
+    <style>
+        :root {
+            --primary-color: #ff7eb9;
+            --bg-color: #fdf6f9;
+            --card-bg: #ffffff;
+            --text-color: #4a4a4a;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .progress-card {
+            background: var(--card-bg);
+            padding: 18px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 18px;
+            text-align: center;
+        }
+        .progress-bar-bg {
+            background: #eee;
+            border-radius: 10px;
+            height: 12px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+        #progress-bar-fill {
+            background: linear-gradient(90deg, #ff7eb9, #ffb199);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .daily-card {
+            background: var(--card-bg);
+            padding: 26px;
+            border-radius: 18px;
+            text-align: center;
+            border: 2px dashed var(--primary-color);
+            margin-bottom: 18px;
+        }
+        .amount {
+            font-size: 2.6rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 28px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(255, 126, 185, 0.28);
+        }
+        button.secondary {
+            background: #fff;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            box-shadow: none;
+        }
+        button:disabled {
+            background: #ccc;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .day-dot {
+            aspect-ratio: 1;
+            background: #eee;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            color: #666;
+            user-select: none;
+            cursor: pointer;
+            position: relative;
+        }
+        .day-dot.done {
+            background: var(--primary-color);
+            color: white;
+        }
+        .day-dot .date {
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.9);
+            position: absolute;
+            bottom: 4px;
+            right: 6px;
+        }
+        .reset-btn {
+            background: none;
+            color: #666;
+            font-size: 0.9rem;
+            text-decoration: underline;
+            margin-top: 12px;
+            box-shadow: none;
+            width: auto;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .controls {
+            display:flex;
+            gap:10px;
+            margin-top:12px;
+        }
+        .small {
+            font-size: 0.85rem;
+            color: #777;
+        }
+        /* celebration overlay */
+        .celebrate {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            pointer-events: none;
+        }
+        .celebrate.active {
+            display: flex;
+            pointer-events: auto;
+        }
+        .celebrate .box {
+            background: rgba(255,255,255,0.95);
+            padding: 24px 30px;
+            border-radius: 14px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        /* simple confetti dots */
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            opacity: 0.95;
+            animation: fall 2s linear infinite;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-50vh) translateX(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(50vh) translateX(40px) rotate(360deg); opacity: 0.2; }
+        }
+        /* responsive tweaks */
+        @media (max-width:420px) {
+            .amount { font-size: 2.2rem; }
+            .container { padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <div class="header">
+        <h1>加油，親愛的 ❤️</h1>
+        <p class="small">每一小步都是未來的保障 — 30 天儲錢大挑戰</p>
+    </div>
+
+    <div class="progress-card" role="region" aria-label="進度卡">
+        <div>目前進度：<span id="current-total">$0</span> / <span id="target-goal">$4,800</span></div>
+        <div class="progress-bar-bg" aria-hidden="true">
+            <div id="progress-bar-fill"></div>
+        </div>
+        <small id="days-left" class="small">剩餘天數：30 天</small>
+    </div>
+
+    <div class="daily-card" id="daily-card" role="region" aria-label="今日儲蓄卡">
+        <div id="status-text">今日儲蓄目標</div>
+        <div class="amount" id="today-amount">$0</div>
+        <button id="check-btn" onclick="markAsDone()" aria-label="標記為已儲蓄">我已儲好！</button>
+
+        <div class="controls" style="margin-top:12px;">
+            <button class="secondary" onclick="exportProgress()" aria-label="匯出進度為 JSON">匯出進度</button>
+            <button class="secondary" onclick="importProgress()" aria-label="匯入進度 JSON">匯入進度</button>
+        </div>
+    </div>
+
+    <div class="history-grid" id="history-grid" aria-label="歷史紀錄"></div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px;">
+        <button class="reset-btn" onclick="resetPlan()" aria-label="重新開始新一個月">重新開始新一個月</button>
+        <div class="small" style="text-align:right;">
+            <label for="goal-input" class="small">目標總額：</label>
+            <input id="goal-input" type="number" min="1" step="50" style="width:110px; padding:6px; border-radius:8px; border:1px solid #ddd;" />
+            <button class="reset-btn" onclick="updateGoal()">套用</button>
+        </div>
+    </div>
+</div>
+
+<!-- celebration overlay -->
+<div class="celebrate" id="celebrate" role="dialog" aria-modal="true" aria-label="完成慶祝視窗">
+    <div class="box">
+        <h2>恭喜你 🎉</h2>
+        <p class="small">你已完成本月 30 天儲錢挑戰！超棒的！</p>
+        <div style="margin-top:12px;">
+            <button onclick="closeCelebrate()" aria-label="關閉慶祝視窗">關閉</button>
+        </div>
+    </div>
+    <!-- some decorative confetti -->
+</div>
+
+<script>
+    // Configurable values
+    let TARGET_GOAL = 4800;
+    const TOTAL_DAYS = 30;
+    const STORAGE_PREFIX = 'savings_challenge';
+
+    let plan = [];
+    // progress: { days: [indices], dates: { index: isoString } }
+    let progress = { days: [], dates: {} };
+
+    // helper currency formatting (千分位)
+    function formatCurrency(n) {
+        if (typeof n !== 'number') n = Number(n) || 0;
+        return '$' + n.toLocaleString('en-US');
+    }
+
+    // keys per year-month to avoid cross-month overwrite
+    function getMonthKeySuffix() {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    }
+    function planKey() { return `${STORAGE_PREFIX}_plan_${getMonthKeySuffix()}`; }
+    function progressKey() { return `${STORAGE_PREFIX}_progress_${getMonthKeySuffix()}`; }
+    function metaKey() { return `${STORAGE_PREFIX}_meta_${getMonthKeySuffix()}`; }
+
+    // initialize
+    function init() {
+        // read stored target in meta (allows user-changed target)
+        const metaRaw = localStorage.getItem(metaKey());
+        if (metaRaw) {
+            try {
+                const meta = JSON.parse(metaRaw);
+                if (meta && typeof meta.target === 'number' && meta.target > 0) {
+                    TARGET_GOAL = meta.target;
+                }
+            } catch(e) { /* ignore */ }
+        }
+        document.getElementById('target-goal').innerText = formatCurrency(TARGET_GOAL);
+        document.getElementById('goal-input').value = TARGET_GOAL;
+
+        const savedPlan = localStorage.getItem(planKey());
+        const savedProgress = localStorage.getItem(progressKey());
+
+        if (savedPlan) {
+            try {
+                plan = JSON.parse(savedPlan);
+            } catch(e) {
+                plan = [];
+            }
+        }
+        if (!savedPlan || !Array.isArray(plan) || plan.length !== TOTAL_DAYS) {
+            generateNewPlan();
+        }
+
+        if (savedProgress) {
+            try {
+                const p = JSON.parse(savedProgress);
+                if (p && Array.isArray(p.days) && typeof p.dates === 'object') {
+                    progress = p;
+                } else {
+                    progress = { days: [], dates: {} };
+                }
+            } catch(e) {
+                progress = { days: [], dates: {} };
+            }
+        } else {
+            progress = { days: [], dates: {} };
+        }
+
+        render();
+    }
+
+    // generate new plan with three tiers and shuffle
+    function generateNewPlan() {
+        plan = [];
+        // 10 days easy (50-100), 10 medium (120-180), 10 hard (200-250)
+        for(let i=0;i<10;i++) plan.push(Math.floor(Math.random()*51)+50);
+        for(let i=0;i<10;i++) plan.push(Math.floor(Math.random()*61)+120);
+        for(let i=0;i<10;i++) plan.push(Math.floor(Math.random()*51)+200);
+
+        // shuffle
+        for(let i=plan.length-1;i>0;i--){
+            const j = Math.floor(Math.random()*(i+1));
+            [plan[i], plan[j]] = [plan[j], plan[i]];
+        }
+
+        // adjust total difference to TARGET_GOAL by adding diff to last day
+        let currentTotal = plan.reduce((a,b)=>a+b,0);
+        let diff = TARGET_GOAL - currentTotal;
+        plan[plan.length-1] += diff;
+        // ensure non-negative
+        if (plan[plan.length-1] < 1) {
+            // clamp and adjust first day
+            const deficit = 1 - plan[plan.length-1];
+            plan[plan.length-1] = 1;
+            plan[0] -= deficit;
+            if (plan[0] < 1) plan[0] = 1; // last-resort clamp
+            // recompute to match target precisely
+            currentTotal = plan.reduce((a,b)=>a+b,0);
+            const finalDiff = TARGET_GOAL - currentTotal;
+            plan[0] += finalDiff;
+        }
+        // save
+        localStorage.setItem(planKey(), JSON.stringify(plan));
+        // reset progress
+        progress = { days: [], dates: {} };
+        localStorage.setItem(progressKey(), JSON.stringify(progress));
+        localStorage.setItem(metaKey(), JSON.stringify({target: TARGET_GOAL}));
+    }
+
+    // save progress
+    function saveProgress() {
+        localStorage.setItem(progressKey(), JSON.stringify(progress));
+    }
+
+    // render UI
+    function render() {
+        const totalSaved = progress.days.reduce((sum, idx) => {
+            if (typeof idx === 'number' && plan[idx] !== undefined) return sum + plan[idx];
+            return sum;
+        }, 0);
+        document.getElementById('current-total').innerText = formatCurrency(totalSaved);
+        document.getElementById('target-goal').innerText = formatCurrency(TARGET_GOAL);
+
+        const progressPercent = (totalSaved / TARGET_GOAL) * 100;
+        document.getElementById('progress-bar-fill').style.width = `${Math.min(progressPercent, 100)}%`;
+
+        document.getElementById('days-left').innerText = `剩餘天數：${TOTAL_DAYS - progress.days.length} 天`;
+
+        // today's amount = next uncompleted day
+        const next = findNextUncompleted();
+        const todayAmount = next === null ? 0 : plan[next];
+        document.getElementById('today-amount').innerText = formatCurrency(todayAmount);
+
+        const btn = document.getElementById('check-btn');
+        if (progress.days.length >= TOTAL_DAYS) {
+            btn.innerText = "本月已圓滿達成！";
+            btn.disabled = true;
+            document.getElementById('status-text').innerText = "太棒了！";
+            showCelebrate();
+        } else {
+            btn.innerText = "我已儲好！";
+            btn.disabled = false;
+            document.getElementById('status-text').innerText = `今日儲蓄目標（第 ${ (next !== null ? next+1 : '-') } 天）`;
+            hideCelebrate();
+        }
+
+        // render grid
+        const grid = document.getElementById('history-grid');
+        grid.innerHTML = '';
+        for(let i=0;i<TOTAL_DAYS;i++){
+            const dot = document.createElement('div');
+            const done = progress.days.includes(i);
+            dot.className = `day-dot ${done ? 'done' : ''}`;
+            dot.setAttribute('role','button');
+            dot.setAttribute('tabindex','0');
+            dot.setAttribute('aria-pressed', done ? 'true' : 'false');
+            dot.setAttribute('aria-label', `第 ${i+1} 天，金額 ${formatCurrency(plan[i])}${done ? '，已完成' : ''}`);
+            dot.innerText = i+1;
+
+            // show completion date if present
+            if (done && progress.dates && progress.dates[i]) {
+                const d = document.createElement('div');
+                d.className = 'date';
+                const iso = progress.dates[i];
+                try {
+                    const dt = new Date(iso);
+                    d.innerText = `${dt.getMonth()+1}/${dt.getDate()}`;
+                } catch(e) { d.innerText = ''; }
+                dot.appendChild(d);
+            }
+
+            // click & keyboard toggle
+            (function(index){
+                dot.addEventListener('click', ()=> toggleDay(index));
+                dot.addEventListener('keydown', (ev)=>{
+                    if (ev.key === 'Enter' || ev.key === ' ') {
+                        ev.preventDefault();
+                        toggleDay(index);
+                    }
+                });
+                // tooltip: show amount on hover via title
+                dot.title = `第 ${index+1} 天 — ${formatCurrency(plan[index])}` + (progress.dates[index] ? `\n已完成：${new Date(progress.dates[index]).toLocaleString()}` : '');
+            })(i);
+
+            grid.appendChild(dot);
+        }
+    }
+
+    // find next uncompleted day index or null
+    function findNextUncompleted() {
+        for(let i=0;i<TOTAL_DAYS;i++){
+            if (!progress.days.includes(i)) return i;
+        }
+        return null;
+    }
+
+    // mark next uncompleted as done
+    function markAsDone() {
+        const next = findNextUncompleted();
+        if (next === null) return;
+        // push and record date
+        if (!progress.days.includes(next)) {
+            progress.days.push(next);
+            progress.dates[next] = new Date().toISOString();
+            progress.days.sort((a,b)=>a-b);
+            saveProgress();
+            render();
+            // non-blocking confirmation
+            setTimeout(()=>{ alert("成功！記得把錢存入儲蓄戶口喔！💪"); }, 50);
+        }
+    }
+
+    // toggle a specific day (click)
+    function toggleDay(index) {
+        const i = Number(index);
+        const idx = progress.days.indexOf(i);
+        if (idx === -1) {
+            // add
+            progress.days.push(i);
+            progress.dates[i] = new Date().toISOString();
+            progress.days.sort((a,b)=>a-b);
+        } else {
+            // remove
+            progress.days.splice(idx,1);
+            delete progress.dates[i];
+        }
+        saveProgress();
+        render();
+    }
+
+    // reset plan
+    function resetPlan() {
+        if (confirm("確定要重新開始新的 30 天計劃嗎？目前的進度會被清除喔！")) {
+            generateNewPlan();
+            render();
+        }
+    }
+
+    // update target goal from input
+    function updateGoal() {
+        const v = Number(document.getElementById('goal-input').value);
+        if (!v || v <= 0) {
+            alert('請輸入有效的目標金額（大於 0）');
+            return;
+        }
+        TARGET_GOAL = Math.round(v);
+        // save meta
+        localStorage.setItem(metaKey(), JSON.stringify({ target: TARGET_GOAL }));
+        // adjust plan to meet new target by distributing difference to last day
+        let currentTotal = plan.reduce((a,b)=>a+b,0);
+        let diff = TARGET_GOAL - currentTotal;
+        plan[plan.length-1] += diff;
+        if (plan[plan.length-1] < 1) {
+            const deficit = 1 - plan[plan.length-1];
+            plan[plan.length-1] = 1;
+            plan[0] -= deficit;
+            if (plan[0] < 1) plan[0] = 1;
+            currentTotal = plan.reduce((a,b)=>a+b,0);
+            plan[0] += TARGET_GOAL - currentTotal;
+        }
+        localStorage.setItem(planKey(), JSON.stringify(plan));
+        document.getElementById('target-goal').innerText = formatCurrency(TARGET_GOAL);
+        render();
+    }
+
+    // celebrate
+    function showCelebrate() {
+        const c = document.getElementById('celebrate');
+        if (!c.classList.contains('active')) {
+            c.classList.add('active');
+            // add some confetti elements
+            for(let i=0;i<24;i++){
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.background = ['#ff7eb9','#ffb199','#ffd97a','#9be7ff','#9bffda'][i%5];
+                conf.style.left = Math.random()*100 + 'vw';
+                conf.style.top = Math.random()*-40 + 'vh';
+                conf.style.animationDelay = (Math.random()*1)+'s';
+                conf.style.transform = `translateX(${(Math.random()*200-100)}px)`;
+                conf.style.width = `${6 + Math.random()*8}px`;
+                conf.style.height = conf.style.width;
+                c.appendChild(conf);
+            }
+        }
+    }
+    function hideCelebrate() {
+        const c = document.getElementById('celebrate');
+        if (c.classList.contains('active')) {
+            c.classList.remove('active');
+            // remove confetti children
+            const items = Array.from(c.querySelectorAll('.confetti'));
+            for (const it of items) it.remove();
+        }
+    }
+    function closeCelebrate() {
+        hideCelebrate();
+    }
+
+    // export progress (download JSON)
+    function exportProgress() {
+        const payload = {
+            plan,
+            progress,
+            meta: { target: TARGET_GOAL, totalDays: TOTAL_DAYS, generatedAt: new Date().toISOString() }
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `savings-progress-${getMonthKeySuffix()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    // import progress (prompt user for JSON paste)
+    function importProgress() {
+        const text = prompt('請貼上先前匯出的 JSON 內容（整段貼上），或取消：');
+        if (!text) return;
+        try {
+            const obj = JSON.parse(text);
+            if (!obj.plan || !obj.progress) throw new Error('格式不符');
+            if (!Array.isArray(obj.plan) || !Array.isArray(obj.progress.days)) throw new Error('格式不符');
+            // basic validation
+            if (obj.plan.length !== TOTAL_DAYS) {
+                if (!confirm('匯入的計劃天數不為 30 天，是否仍要匯入？')) {
+                    return;
+                }
+            }
+            plan = obj.plan.slice(0, TOTAL_DAYS);
+            progress = { days: [], dates: {} };
+            // copy progress days that are within range
+            if (Array.isArray(obj.progress.days)) {
+                progress.days = obj.progress.days.filter(d => typeof d === 'number' && d >= 0 && d < TOTAL_DAYS).slice();
+            }
+            if (obj.progress.dates && typeof obj.progress.dates === 'object') {
+                for (const k of Object.keys(obj.progress.dates)) {
+                    const ki = Number(k);
+                    if (!Number.isNaN(ki) && ki >=0 && ki < TOTAL_DAYS) {
+                        progress.dates[ki] = obj.progress.dates[k];
+                    }
+                }
+            }
+            // if meta target present, adopt it
+            if (obj.meta && typeof obj.meta.target === 'number') {
+                TARGET_GOAL = obj.meta.target;
+                localStorage.setItem(metaKey(), JSON.stringify({ target: TARGET_GOAL }));
+            }
+            // save
+            localStorage.setItem(planKey(), JSON.stringify(plan));
+            saveProgress();
+            alert('匯入成功');
+            render();
+        } catch(e) {
+            alert('匯入失敗：格式錯誤或無法解析 JSON');
+            console.error(e);
+        }
+    }
+
+    // start
+    init();
+
+    // Expose some functions for console/testing
+    window._savings = {
+        generateNewPlan,
+        render,
+        markAsDone,
+        toggleDay,
+        exportProgress,
+        importProgress,
+        resetPlan,
+        get state() { return { plan, progress, TARGET_GOAL }; }
+    };
+</script>
+
+</body>
+</html>
