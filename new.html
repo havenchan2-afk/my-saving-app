@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>💰 30天儲錢大挑戰</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 30天智能儲錢計劃</title>
     <style>
         :root {
-            --primary-color: #ff7eb9;
-            --bg-color: #fdf6f9;
+            --primary-color: #6c5ce7; /* 換一個優雅的紫色 */
+            --bg-color: #f0f3f7;
             --card-bg: #ffffff;
-            --text-color: #4a4a4a;
+            --text-color: #2d3436;
         }
-        * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -21,48 +20,42 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            min-height: 100vh;
         }
-        .container {
-            width: 100%;
-            max-width: 480px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+        .container { width: 100%; max-width: 400px; }
+        .header { text-align: center; margin-bottom: 20px; }
         .progress-card {
             background: var(--card-bg);
-            padding: 18px;
-            border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 18px;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
             text-align: center;
         }
         .progress-bar-bg {
-            background: #eee;
+            background: #dfe6e9;
             border-radius: 10px;
             height: 12px;
-            margin: 12px 0;
+            margin: 15px 0;
             overflow: hidden;
         }
         #progress-bar-fill {
-            background: linear-gradient(90deg, #ff7eb9, #ffb199);
+            background: linear-gradient(90deg, #a29bfe, #6c5ce7);
             height: 100%;
             width: 0%;
-            transition: width 0.5s ease;
+            transition: width 0.8s ease;
         }
         .daily-card {
             background: var(--card-bg);
-            padding: 26px;
-            border-radius: 18px;
+            padding: 30px;
+            border-radius: 25px;
             text-align: center;
-            border: 2px dashed var(--primary-color);
-            margin-bottom: 18px;
+            border: 2px solid #6c5ce7;
+            margin-bottom: 20px;
+            position: relative;
         }
         .amount {
-            font-size: 2.6rem;
-            font-weight: bold;
+            font-size: 3.5rem;
+            font-weight: 800;
             color: var(--primary-color);
             margin: 10px 0;
         }
@@ -70,600 +63,192 @@
             background: var(--primary-color);
             color: white;
             border: none;
-            padding: 12px 18px;
-            border-radius: 28px;
-            font-size: 1rem;
-            font-weight: 700;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
             cursor: pointer;
             width: 100%;
-            box-shadow: 0 4px 10px rgba(255, 126, 185, 0.28);
+            transition: transform 0.2s;
         }
-        button.secondary {
-            background: #fff;
-            color: var(--primary-color);
-            border: 2px solid var(--primary-color);
-            box-shadow: none;
-            width: auto;
-            padding: 8px 12px;
-        }
-        button:disabled {
-            background: #ccc;
-            box-shadow: none;
-            cursor: not-allowed;
-        }
+        button:active { transform: scale(0.95); }
+        button:disabled { background: #b2bec3; cursor: not-allowed; }
         .history-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-top: 18px;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-top: 20px;
         }
         .day-dot {
             aspect-ratio: 1;
-            background: #eee;
-            border-radius: 8px;
+            background: #fff;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.85rem;
-            color: #666;
-            user-select: none;
-            cursor: pointer;
-            position: relative;
+            font-size: 0.75rem;
+            color: #b2bec3;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .day-dot.done {
             background: var(--primary-color);
             color: white;
+            box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
         }
-        .day-dot .date {
-            font-size: 0.6rem;
-            color: rgba(255,255,255,0.95);
-            position: absolute;
-            bottom: 4px;
-            right: 6px;
-        }
-        .reset-btn {
-            background: none;
-            color: #666;
-            font-size: 0.9rem;
-            text-decoration: underline;
-            margin-top: 12px;
-            box-shadow: none;
-            width: auto;
-            padding: 6px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .controls {
-            display:flex;
-            gap:10px;
-            margin-top:12px;
-        }
-        .small {
-            font-size: 0.85rem;
-            color: #777;
-        }
-        /* celebration overlay */
-        .celebrate {
-            position: fixed;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-            pointer-events: none;
-        }
-        .celebrate.active {
-            display: flex;
-            pointer-events: auto;
-        }
-        .celebrate .box {
-            background: rgba(255,255,255,0.95);
-            padding: 24px 30px;
-            border-radius: 14px;
+        .settings {
+            margin-top: 30px;
+            padding: 15px;
+            font-size: 0.8rem;
+            color: #636e72;
             text-align: center;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
         }
-        /* simple confetti dots */
-        .confetti {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            opacity: 0.95;
-            animation: fall 2s linear infinite;
-        }
-        @keyframes fall {
-            0% { transform: translateY(-50vh) translateX(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(50vh) translateX(40px) rotate(360deg); opacity: 0.2; }
-        }
-        /* responsive tweaks */
-        @media (max-width:420px) {
-            .amount { font-size: 2.2rem; }
-            .container { padding: 8px; }
-            .controls { flex-direction: column; }
-            .controls .secondary { width: 100%; }
+        input {
+            padding: 5px;
+            width: 60px;
+            border: 1px solid #dfe6e9;
+            border-radius: 5px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-<div class="container" id="app">
+<div class="container">
     <div class="header">
         <h1>加油，親愛的 ❤️</h1>
-        <p class="small">每一小步都是未來的保障 — 30 天儲錢大挑戰</p>
+        <p>平衡生活與儲蓄的智慧</p>
     </div>
 
-    <div class="progress-card" role="region" aria-label="進度卡">
-        <div>目前進度：<span id="current-total">$0</span> / <span id="target-goal">$4,800</span></div>
-        <div class="progress-bar-bg" aria-hidden="true">
+    <div class="progress-card">
+        <div>已累積：<span id="current-total">$0</span> / $<span id="display-target">4800</span></div>
+        <div class="progress-bar-bg">
             <div id="progress-bar-fill"></div>
         </div>
-        <small id="days-left" class="small">剩餘天數：30 天</small>
+        <small id="days-left">加油！還有 30 天</small>
     </div>
 
-    <div class="daily-card" id="daily-card" role="region" aria-label="今日儲蓄卡">
-        <div id="status-text">今日儲蓄目標</div>
+    <div class="daily-card">
+        <div id="status-text" style="font-weight: bold; color: #636e72;">今日儲蓄目標</div>
         <div class="amount" id="today-amount">$0</div>
-        <button id="check-btn" onclick="markAsDone()" aria-label="標記為已儲蓄">我已儲好！</button>
-
-        <div class="controls" style="margin-top:12px;">
-            <button class="secondary" onclick="exportProgress()" aria-label="匯出進度為 JSON">匯出進度</button>
-            <button class="secondary" onclick="importProgress()" aria-label="匯入進度 JSON">匯入進度</button>
-        </div>
+        <button id="check-btn" onclick="markAsDone()">我已存好這筆錢！</button>
     </div>
 
-    <div class="history-grid" id="history-grid" aria-label="歷史紀錄"></div>
+    <div class="history-grid" id="history-grid"></div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; gap:12px; flex-wrap:wrap;">
-        <button class="reset-btn" onclick="resetPlan()" aria-label="重新開始新一個月">重新開始新一個月</button>
-        <div class="small" style="text-align:right; display:flex; align-items:center; gap:8px;">
-            <label for="goal-input" class="small">目標總額：</label>
-            <input id="goal-input" type="number" min="1" step="50" style="width:110px; padding:6px; border-radius:8px; border:1px solid #ddd;" />
-            <button class="reset-btn" onclick="updateGoal()">套用</button>
-        </div>
-    </div>
-</div>
-
-<!-- celebration overlay -->
-<div class="celebrate" id="celebrate" role="dialog" aria-modal="true" aria-label="完成慶祝視窗">
-    <div class="box">
-        <h2>恭喜你 🎉</h2>
-        <p class="small">你已完成本月 30 天儲錢挑戰！超棒的！</p>
-        <div style="margin-top:12px;">
-            <button onclick="closeCelebrate()" aria-label="關閉慶祝視窗">關閉</button>
-        </div>
+    <div class="settings">
+        月目標金額：$<input type="number" id="target-input" value="4800">
+        <br><br>
+        <a href="#" onclick="resetPlan()" style="color: #b2bec3;">重設並開始新計劃</a>
     </div>
 </div>
 
 <script>
-    // Configurable values
-    let TARGET_GOAL = 4800;
     const TOTAL_DAYS = 30;
-    const STORAGE_PREFIX = 'savings_challenge';
-
     let plan = [];
-    // progress: { days: [indices], dates: { index: isoString } }
-    let progress = { days: [], dates: {} };
+    let completedDays = [];
+    let targetGoal = 4800;
 
-    // helper currency formatting (千分位)
-    function formatCurrency(n) {
-        if (typeof n !== 'number') n = Number(n) || 0;
-        return '$' + n.toLocaleString('en-US');
-    }
-
-    // keys per year-month to avoid cross-month overwrite
-    function getMonthKeySuffix() {
-        const now = new Date();
-        return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    }
-    function planKey() { return `${STORAGE_PREFIX}_plan_${getMonthKeySuffix()}`; }
-    function progressKey() { return `${STORAGE_PREFIX}_progress_${getMonthKeySuffix()}`; }
-    function metaKey() { return `${STORAGE_PREFIX}_meta_${getMonthKeySuffix()}`; }
-
-    // Balanced plan generator
-    // Creates daily amounts that vary around a base but avoids extreme spikes.
-    function generateBalancedPlan(target, days = TOTAL_DAYS) {
-        target = Math.max(1, Math.round(Number(target) || 0));
-        const base = Math.floor(target / days);               // baseline per day
-        // Define minimum per-day (half of base or at least 1)
-        const minDay = Math.max(1, Math.floor(base * 0.5));
-        // Allow small relative jitter (~15% of base) but at least 5
-        const jitter = Math.max(5, Math.round(base * 0.15));
-        // Cap for per-day maximum to prevent one day taking too much (40% of base or at least 50)
-        let perDayCap = base + Math.max(Math.round(base * 0.4), 50);
-
-        // Start with base + random jitter per day
-        let arr = new Array(days).fill(0).map(() => base + (Math.floor(Math.random() * (2 * jitter + 1)) - jitter));
-        // Ensure minimum
-        arr = arr.map(v => Math.max(v, minDay));
-
-        // Fix sum to target by distributing difference while respecting caps
-        let sum = arr.reduce((a,b) => a + b, 0);
-        let diff = target - sum;
-
-        // Helper to pick random index from candidates
-        function pickRandomIndex(candidates) {
-            return candidates[Math.floor(Math.random() * candidates.length)];
-        }
-
-        // Try to distribute diff efficiently in chunks to reduce iterations
-        const maxIter = 10000;
-        let iter = 0;
-        while (diff !== 0 && iter < maxIter) {
-            iter++;
-            if (diff > 0) {
-                // add to days that are below cap
-                let candidates = [];
-                for (let i = 0; i < days; i++) if (arr[i] < perDayCap) candidates.push(i);
-                if (candidates.length === 0) {
-                    // relax cap a bit if no candidate
-                    perDayCap += Math.max(10, Math.round(perDayCap * 0.05));
-                    continue;
-                }
-                const idx = pickRandomIndex(candidates);
-                // add in chunks: larger if diff still large, else small increments
-                const add = Math.min(diff, Math.max(1, Math.min(perDayCap - arr[idx], Math.round(Math.min(diff, Math.ceil(diff / candidates.length))))));
-                arr[idx] += add;
-                diff -= add;
-            } else { // diff < 0, need to subtract
-                let candidates = [];
-                for (let i = 0; i < days; i++) if (arr[i] > minDay) candidates.push(i);
-                if (candidates.length === 0) {
-                    // if cannot subtract, relax minDay slightly (rare)
-                    if (minDay > 1) { minDay -= 1; continue; }
-                    break;
-                }
-                const idx = pickRandomIndex(candidates);
-                const reduce = Math.min(-diff, arr[idx] - minDay, Math.max(1, Math.round(Math.min(-diff, Math.ceil(-diff / candidates.length)))));
-                arr[idx] -= reduce;
-                diff += reduce;
-            }
-        }
-
-        // Final safety checks: ensure no zero or negative and sum correct
-        for (let i = 0; i < days; i++) {
-            if (!Number.isFinite(arr[i]) || arr[i] < 1) arr[i] = 1;
-            arr[i] = Math.round(arr[i]);
-        }
-        // If still off by a small residual due to rounding, fix deterministically
-        let finalSum = arr.reduce((a,b) => a + b, 0);
-        let residual = target - finalSum;
-        let safetyIter = 0;
-        while (residual !== 0 && safetyIter < 1000) {
-            safetyIter++;
-            if (residual > 0) {
-                // add 1 to the smallest day(s) that are under cap
-                let minVal = Math.min(...arr);
-                let idx = arr.indexOf(minVal);
-                if (arr[idx] < perDayCap) { arr[idx] += 1; residual -= 1; continue; }
-                // else add to any
-                arr[0] += 1; residual -= 1;
-            } else {
-                // residual < 0: subtract 1 from largest day(s) that are above minDay
-                let maxVal = Math.max(...arr);
-                let idx = arr.indexOf(maxVal);
-                if (arr[idx] > minDay) { arr[idx] -= 1; residual += 1; continue; }
-                // else subtract from any >1
-                for (let i = 0; i < days; i++) {
-                    if (arr[i] > 1) { arr[i] -= 1; residual += 1; break; }
-                }
-                if (residual < 0 && arr.every(v => v <= 1)) break;
-            }
-        }
-
-        // Final clamp
-        arr = arr.map(v => Math.max(1, Math.round(v)));
-
-        return arr;
-    }
-
-    // initialize
     function init() {
-        // read stored target in meta (allows user-changed target)
-        const metaRaw = localStorage.getItem(metaKey());
-        if (metaRaw) {
-            try {
-                const meta = JSON.parse(metaRaw);
-                if (meta && typeof meta.target === 'number' && meta.target > 0) {
-                    TARGET_GOAL = meta.target;
-                }
-            } catch(e) { /* ignore */ }
-        }
-        document.getElementById('target-goal').innerText = formatCurrency(TARGET_GOAL);
-        document.getElementById('goal-input').value = TARGET_GOAL;
+        const savedPlan = localStorage.getItem('savings_plan_v2');
+        const savedProgress = localStorage.getItem('savings_progress_v2');
+        const savedTarget = localStorage.getItem('savings_target_v2');
 
-        const savedPlan = localStorage.getItem(planKey());
-        const savedProgress = localStorage.getItem(progressKey());
-
-        if (savedPlan) {
-            try {
-                plan = JSON.parse(savedPlan);
-            } catch(e) {
-                plan = [];
-            }
-        }
-        if (!savedPlan || !Array.isArray(plan) || plan.length !== TOTAL_DAYS) {
-            plan = generateBalancedPlan(TARGET_GOAL, TOTAL_DAYS);
-            localStorage.setItem(planKey(), JSON.stringify(plan));
-            progress = { days: [], dates: {} };
-            localStorage.setItem(progressKey(), JSON.stringify(progress));
-        }
-
-        if (savedProgress) {
-            try {
-                const p = JSON.parse(savedProgress);
-                if (p && Array.isArray(p.days) && typeof p.dates === 'object') {
-                    progress = p;
-                } else {
-                    progress = { days: [], dates: {} };
-                }
-            } catch(e) {
-                progress = { days: [], dates: {} };
-            }
+        if (savedPlan && savedTarget) {
+            plan = JSON.parse(savedPlan);
+            completedDays = JSON.parse(savedProgress) || [];
+            targetGoal = parseInt(savedTarget);
+            document.getElementById('target-input').value = targetGoal;
         } else {
-            progress = { days: [], dates: {} };
+            generateNewPlan();
         }
-
         render();
     }
 
-    // save progress
-    function saveProgress() {
-        localStorage.setItem(progressKey(), JSON.stringify(progress));
+    function generateNewPlan() {
+        targetGoal = parseInt(document.getElementById('target-input').value) || 4800;
+        plan = [];
+        let remainingTotal = targetGoal;
+        
+        // 使用「剩餘均值隨機法」
+        for (let i = 0; i < TOTAL_DAYS; i++) {
+            let daysLeft = TOTAL_DAYS - i;
+            if (daysLeft === 1) {
+                plan.push(Math.round(remainingTotal));
+            } else {
+                let avg = remainingTotal / daysLeft;
+                // 波動範圍：平均值的 0.7 倍 到 1.3 倍
+                let min = avg * 0.7;
+                let max = avg * 1.3;
+                let daily = Math.floor(Math.random() * (max - min + 1)) + min;
+                
+                // 確保數值是 5 或 10 的倍數，方便找錢/儲錢
+                daily = Math.round(daily / 5) * 5; 
+                
+                plan.push(daily);
+                remainingTotal -= daily;
+            }
+        }
+        
+        // 打亂順序，避免越後面越少或越多
+        plan.sort(() => Math.random() - 0.5);
+
+        localStorage.setItem('savings_plan_v2', JSON.stringify(plan));
+        localStorage.setItem('savings_target_v2', targetGoal.toString());
+        completedDays = [];
+        localStorage.setItem('savings_progress_v2', JSON.stringify(completedDays));
     }
 
-    // render UI
     function render() {
-        const totalSaved = progress.days.reduce((sum, idx) => {
-            if (typeof idx === 'number' && plan[idx] !== undefined) return sum + plan[idx];
-            return sum;
-        }, 0);
-        document.getElementById('current-total').innerText = formatCurrency(totalSaved);
-        document.getElementById('target-goal').innerText = formatCurrency(TARGET_GOAL);
+        const currentDayIndex = completedDays.length;
+        const isFinished = currentDayIndex >= TOTAL_DAYS;
 
-        const progressPercent = (totalSaved / TARGET_GOAL) * 100;
+        document.getElementById('display-target').innerText = targetGoal;
+        const todayAmount = isFinished ? 0 : plan[currentDayIndex];
+        document.getElementById('today-amount').innerText = `$${todayAmount}`;
+        
+        const totalSaved = completedDays.reduce((sum, idx) => sum + plan[idx], 0);
+        document.getElementById('current-total').innerText = `$${totalSaved}`;
+        
+        const progressPercent = (totalSaved / targetGoal) * 100;
         document.getElementById('progress-bar-fill').style.width = `${Math.min(progressPercent, 100)}%`;
-
-        document.getElementById('days-left').innerText = `剩餘天數：${TOTAL_DAYS - progress.days.length} 天`;
-
-        // today's amount = next uncompleted day
-        const next = findNextUncompleted();
-        const todayAmount = next === null ? 0 : plan[next];
-        document.getElementById('today-amount').innerText = formatCurrency(todayAmount);
+        
+        document.getElementById('days-left').innerText = isFinished ? "挑戰完成！" : `加油！還有 ${TOTAL_DAYS - currentDayIndex} 天`;
 
         const btn = document.getElementById('check-btn');
-        if (progress.days.length >= TOTAL_DAYS) {
+        if(isFinished) {
             btn.innerText = "本月已圓滿達成！";
             btn.disabled = true;
-            document.getElementById('status-text').innerText = "太棒了！";
-            showCelebrate();
         } else {
-            btn.innerText = "我已儲好！";
+            btn.innerText = "我已存好這筆錢！";
             btn.disabled = false;
-            document.getElementById('status-text').innerText = `今日儲蓄目標（第 ${ (next !== null ? next+1 : '-') } 天）`;
-            hideCelebrate();
         }
 
-        // render grid
         const grid = document.getElementById('history-grid');
         grid.innerHTML = '';
-        for(let i=0;i<TOTAL_DAYS;i++){
+        for(let i=0; i<TOTAL_DAYS; i++) {
             const dot = document.createElement('div');
-            const done = progress.days.includes(i);
-            dot.className = `day-dot ${done ? 'done' : ''}`;
-            dot.setAttribute('role','button');
-            dot.setAttribute('tabindex','0');
-            dot.setAttribute('aria-pressed', done ? 'true' : 'false');
-            dot.setAttribute('aria-label', `第 ${i+1} 天，金額 ${formatCurrency(plan[i])}${done ? '，已完成' : ''}`);
-            dot.innerText = i+1;
-
-            // show completion date if present
-            if (done && progress.dates && progress.dates[i]) {
-                const d = document.createElement('div');
-                d.className = 'date';
-                const iso = progress.dates[i];
-                try {
-                    const dt = new Date(iso);
-                    d.innerText = `${dt.getMonth()+1}/${dt.getDate()}`;
-                } catch(e) { d.innerText = ''; }
-                dot.appendChild(d);
-            }
-
-            // click & keyboard toggle
-            (function(index){
-                dot.addEventListener('click', ()=> toggleDay(index));
-                dot.addEventListener('keydown', (ev)=>{
-                    if (ev.key === 'Enter' || ev.key === ' ') {
-                        ev.preventDefault();
-                        toggleDay(index);
-                    }
-                });
-                // tooltip: show amount on hover via title
-                dot.title = `第 ${index+1} 天 — ${formatCurrency(plan[index])}` + (progress.dates[index] ? `\n已完成：${new Date(progress.dates[index]).toLocaleString()}` : '');
-            })(i);
-
+            dot.className = `day-dot ${i < completedDays.length ? 'done' : ''}`;
+            dot.innerText = i + 1;
             grid.appendChild(dot);
         }
     }
 
-    // find next uncompleted day index or null
-    function findNextUncompleted() {
-        for(let i=0;i<TOTAL_DAYS;i++){
-            if (!progress.days.includes(i)) return i;
-        }
-        return null;
-    }
-
-    // mark next uncompleted as done
     function markAsDone() {
-        const next = findNextUncompleted();
-        if (next === null) return;
-        // push and record date
-        if (!progress.days.includes(next)) {
-            progress.days.push(next);
-            progress.dates[next] = new Date().toISOString();
-            progress.days.sort((a,b)=>a-b);
-            saveProgress();
+        if(completedDays.length < TOTAL_DAYS) {
+            completedDays.push(completedDays.length);
+            localStorage.setItem('savings_progress_v2', JSON.stringify(completedDays));
             render();
-            // non-blocking confirmation
-            setTimeout(()=>{ alert("成功！記得把錢存入儲蓄戶口喔！💪"); }, 50);
         }
     }
 
-    // toggle a specific day (click)
-    function toggleDay(index) {
-        const i = Number(index);
-        const idx = progress.days.indexOf(i);
-        if (idx === -1) {
-            // add
-            progress.days.push(i);
-            progress.dates[i] = new Date().toISOString();
-            progress.days.sort((a,b)=>a-b);
-        } else {
-            // remove
-            progress.days.splice(idx,1);
-            delete progress.dates[i];
-        }
-        saveProgress();
-        render();
-    }
-
-    // reset plan
     function resetPlan() {
-        if (confirm("確定要重新開始新的 30 天計劃嗎？目前的進度會被清除喔！")) {
-            plan = generateBalancedPlan(TARGET_GOAL, TOTAL_DAYS);
-            localStorage.setItem(planKey(), JSON.stringify(plan));
-            progress = { days: [], dates: {} };
-            localStorage.setItem(progressKey(), JSON.stringify(progress));
+        if(confirm("確定要按此目標金額重新開始 30 天計劃嗎？")) {
+            generateNewPlan();
             render();
         }
     }
 
-    // update target goal from input
-    function updateGoal() {
-        const v = Number(document.getElementById('goal-input').value);
-        if (!v || v <= 0) {
-            alert('請輸入有效的目標金額（大於 0）');
-            return;
-        }
-        TARGET_GOAL = Math.round(v);
-        // save meta
-        localStorage.setItem(metaKey(), JSON.stringify({ target: TARGET_GOAL }));
-        // regenerate a balanced plan for new target
-        plan = generateBalancedPlan(TARGET_GOAL, TOTAL_DAYS);
-        localStorage.setItem(planKey(), JSON.stringify(plan));
-        render();
-    }
-
-    // celebrate
-    function showCelebrate() {
-        const c = document.getElementById('celebrate');
-        if (!c.classList.contains('active')) {
-            c.classList.add('active');
-            // add some confetti elements
-            for(let i=0;i<28;i++){
-                const conf = document.createElement('div');
-                conf.className = 'confetti';
-                conf.style.background = ['#ff7eb9','#ffb199','#ffd97a','#9be7ff','#9bffda'][i%5];
-                conf.style.left = Math.random()*100 + 'vw';
-                conf.style.top = Math.random()*-40 + 'vh';
-                conf.style.animationDelay = (Math.random()*1)+'s';
-                conf.style.transform = `translateX(${(Math.random()*200-100)}px)`;
-                conf.style.width = `${6 + Math.random()*10}px`;
-                conf.style.height = conf.style.width;
-                c.appendChild(conf);
-            }
-        }
-    }
-    function hideCelebrate() {
-        const c = document.getElementById('celebrate');
-        if (c.classList.contains('active')) {
-            c.classList.remove('active');
-            // remove confetti children
-            const items = Array.from(c.querySelectorAll('.confetti'));
-            for (const it of items) it.remove();
-        }
-    }
-    function closeCelebrate() {
-        hideCelebrate();
-    }
-
-    // export progress (download JSON)
-    function exportProgress() {
-        const payload = {
-            plan,
-            progress,
-            meta: { target: TARGET_GOAL, totalDays: TOTAL_DAYS, generatedAt: new Date().toISOString() }
-        };
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `savings-progress-${getMonthKeySuffix()}.json`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-    }
-
-    // import progress (prompt user for JSON paste)
-    function importProgress() {
-        const text = prompt('請貼上先前匯出的 JSON 內容（整段貼上），或取消：');
-        if (!text) return;
-        try {
-            const obj = JSON.parse(text);
-            if (!obj.plan || !obj.progress) throw new Error('格式不符');
-            if (!Array.isArray(obj.plan) || !Array.isArray(obj.progress.days)) throw new Error('格式不符');
-            // basic validation
-            if (obj.plan.length !== TOTAL_DAYS) {
-                if (!confirm('匯入的計劃天數不為 30 天，是否仍要匯入？')) {
-                    return;
-                }
-            }
-            plan = obj.plan.slice(0, TOTAL_DAYS);
-            progress = { days: [], dates: {} };
-            // copy progress days that are within range
-            if (Array.isArray(obj.progress.days)) {
-                progress.days = obj.progress.days.filter(d => typeof d === 'number' && d >= 0 && d < TOTAL_DAYS).slice();
-            }
-            if (obj.progress.dates && typeof obj.progress.dates === 'object') {
-                for (const k of Object.keys(obj.progress.dates)) {
-                    const ki = Number(k);
-                    if (!Number.isNaN(ki) && ki >=0 && ki < TOTAL_DAYS) {
-                        progress.dates[ki] = obj.progress.dates[k];
-                    }
-                }
-            }
-            // if meta target present, adopt it
-            if (obj.meta && typeof obj.meta.target === 'number') {
-                TARGET_GOAL = obj.meta.target;
-                localStorage.setItem(metaKey(), JSON.stringify({ target: TARGET_GOAL }));
-            }
-            // save
-            localStorage.setItem(planKey(), JSON.stringify(plan));
-            saveProgress();
-            alert('匯入成功');
-            render();
-        } catch(e) {
-            alert('匯入失敗：格式錯誤或無法解析 JSON');
-            console.error(e);
-        }
-    }
-
-    // start
     init();
-
-    // Expose some functions for console/testing
-    window._savings = {
-        generateBalancedPlan,
-        render,
-        markAsDone,
-        toggleDay: (i) => toggleDay(i),
-        exportProgress,
-        importProgress,
-        resetPlan,
-        get state() { return { plan, progress, TARGET_GOAL }; }
-    };
 </script>
 
 </body>
