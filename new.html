@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 30天智能儲錢計劃</title>
+    <style>
+        :root {
+            --primary-color: #6c5ce7; /* 換一個優雅的紫色 */
+            --bg-color: #f0f3f7;
+            --card-bg: #ffffff;
+            --text-color: #2d3436;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .container { width: 100%; max-width: 400px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .progress-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .progress-bar-bg {
+            background: #dfe6e9;
+            border-radius: 10px;
+            height: 12px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        #progress-bar-fill {
+            background: linear-gradient(90deg, #a29bfe, #6c5ce7);
+            height: 100%;
+            width: 0%;
+            transition: width 0.8s ease;
+        }
+        .daily-card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 25px;
+            text-align: center;
+            border: 2px solid #6c5ce7;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .amount {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        button:active { transform: scale(0.95); }
+        button:disabled { background: #b2bec3; cursor: not-allowed; }
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-top: 20px;
+        }
+        .day-dot {
+            aspect-ratio: 1;
+            background: #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: #b2bec3;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .day-dot.done {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
+        }
+        .settings {
+            margin-top: 30px;
+            padding: 15px;
+            font-size: 0.8rem;
+            color: #636e72;
+            text-align: center;
+        }
+        input {
+            padding: 5px;
+            width: 60px;
+            border: 1px solid #dfe6e9;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>加油，親愛的 ❤️</h1>
+        <p>平衡生活與儲蓄的智慧</p>
+    </div>
+
+    <div class="progress-card">
+        <div>已累積：<span id="current-total">$0</span> / $<span id="display-target">4800</span></div>
+        <div class="progress-bar-bg">
+            <div id="progress-bar-fill"></div>
+        </div>
+        <small id="days-left">加油！還有 30 天</small>
+    </div>
+
+    <div class="daily-card">
+        <div id="status-text" style="font-weight: bold; color: #636e72;">今日儲蓄目標</div>
+        <div class="amount" id="today-amount">$0</div>
+        <button id="check-btn" onclick="markAsDone()">我已存好這筆錢！</button>
+    </div>
+
+    <div class="history-grid" id="history-grid"></div>
+
+    <div class="settings">
+        月目標金額：$<input type="number" id="target-input" value="4800">
+        <br><br>
+        <a href="#" onclick="resetPlan()" style="color: #b2bec3;">重設並開始新計劃</a>
+    </div>
+</div>
+
+<script>
+    const TOTAL_DAYS = 30;
+    let plan = [];
+    let completedDays = [];
+    let targetGoal = 4800;
+
+    function init() {
+        const savedPlan = localStorage.getItem('savings_plan_v2');
+        const savedProgress = localStorage.getItem('savings_progress_v2');
+        const savedTarget = localStorage.getItem('savings_target_v2');
+
+        if (savedPlan && savedTarget) {
+            plan = JSON.parse(savedPlan);
+            completedDays = JSON.parse(savedProgress) || [];
+            targetGoal = parseInt(savedTarget);
+            document.getElementById('target-input').value = targetGoal;
+        } else {
+            generateNewPlan();
+        }
+        render();
+    }
+
+    function generateNewPlan() {
+        targetGoal = parseInt(document.getElementById('target-input').value) || 4800;
+        plan = [];
+        let remainingTotal = targetGoal;
+        
+        // 使用「剩餘均值隨機法」
+        for (let i = 0; i < TOTAL_DAYS; i++) {
+            let daysLeft = TOTAL_DAYS - i;
+            if (daysLeft === 1) {
+                plan.push(Math.round(remainingTotal));
+            } else {
+                let avg = remainingTotal / daysLeft;
+                // 波動範圍：平均值的 0.7 倍 到 1.3 倍
+                let min = avg * 0.7;
+                let max = avg * 1.3;
+                let daily = Math.floor(Math.random() * (max - min + 1)) + min;
+                
+                // 確保數值是 5 或 10 的倍數，方便找錢/儲錢
+                daily = Math.round(daily / 5) * 5; 
+                
+                plan.push(daily);
+                remainingTotal -= daily;
+            }
+        }
+        
+        // 打亂順序，避免越後面越少或越多
+        plan.sort(() => Math.random() - 0.5);
+
+        localStorage.setItem('savings_plan_v2', JSON.stringify(plan));
+        localStorage.setItem('savings_target_v2', targetGoal.toString());
+        completedDays = [];
+        localStorage.setItem('savings_progress_v2', JSON.stringify(completedDays));
+    }
+
+    function render() {
+        const currentDayIndex = completedDays.length;
+        const isFinished = currentDayIndex >= TOTAL_DAYS;
+
+        document.getElementById('display-target').innerText = targetGoal;
+        const todayAmount = isFinished ? 0 : plan[currentDayIndex];
+        document.getElementById('today-amount').innerText = `$${todayAmount}`;
+        
+        const totalSaved = completedDays.reduce((sum, idx) => sum + plan[idx], 0);
+        document.getElementById('current-total').innerText = `$${totalSaved}`;
+        
+        const progressPercent = (totalSaved / targetGoal) * 100;
+        document.getElementById('progress-bar-fill').style.width = `${Math.min(progressPercent, 100)}%`;
+        
+        document.getElementById('days-left').innerText = isFinished ? "挑戰完成！" : `加油！還有 ${TOTAL_DAYS - currentDayIndex} 天`;
+
+        const btn = document.getElementById('check-btn');
+        if(isFinished) {
+            btn.innerText = "本月已圓滿達成！";
+            btn.disabled = true;
+        } else {
+            btn.innerText = "我已存好這筆錢！";
+            btn.disabled = false;
+        }
+
+        const grid = document.getElementById('history-grid');
+        grid.innerHTML = '';
+        for(let i=0; i<TOTAL_DAYS; i++) {
+            const dot = document.createElement('div');
+            dot.className = `day-dot ${i < completedDays.length ? 'done' : ''}`;
+            dot.innerText = i + 1;
+            grid.appendChild(dot);
+        }
+    }
+
+    function markAsDone() {
+        if(completedDays.length < TOTAL_DAYS) {
+            completedDays.push(completedDays.length);
+            localStorage.setItem('savings_progress_v2', JSON.stringify(completedDays));
+            render();
+        }
+    }
+
+    function resetPlan() {
+        if(confirm("確定要按此目標金額重新開始 30 天計劃嗎？")) {
+            generateNewPlan();
+            render();
+        }
+    }
+
+    init();
+</script>
+
+</body>
+</html>
